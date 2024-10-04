@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 from helper_code.maps import logistic_map
 
 
+# STUFF WE DID IN LAB, RATE OF ENTROPY, ETC
+# RIGHT NOW EVALUATES HU FOR DIFFERENT PARTITION SIZES WITH DIFFERENT WORD LENGTHS
+
+
 def LCE(sys: callable, x_0: float, r: float, n: int, verbose=False) -> float:
     """
     Computes the Lyapunov exponent of a system.

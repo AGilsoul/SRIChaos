@@ -2,6 +2,9 @@ import numpy as np
 from helper_code.maps import logistic_map
 
 
+# FUNCTIONS TO CALCULATE/APPROX LCE
+
+
 def LCE(x_0, r, n):
     x_vals = logistic_map(r, x_0, n)
     sum = 0

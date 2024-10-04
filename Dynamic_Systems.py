@@ -4,6 +4,8 @@ from typing import Union, Callable
 from n_dim_systems import *
 
 
+# TO ANIMATE DYNAMIC SYSTEMS
+
 def Log_Map(X: np.array, params: dict) -> np.array:
     r = params['r']
     x = X[0]
@@ -83,7 +85,7 @@ def run_Lorenz():
     sys = System(Lorenz_Sys, params, init_conditions)
 
     # analyze_system(sys, dt, max_t, lorenz_dim=2, model_name='Lorenz System')
-    print(f'LCE: {n_dim_approx_LCE(sys, 1e-9, 2, dt=0.01, max_t=20)}')
+    print(f'LCE: {n_dim_approx_LCE(sys, init_conditions, 1e-9, 2, dt=0.01, max_t=20)}')
 
 
 def Duffing_Sys(X: np.array, t: float, params: dict) -> np.array:
@@ -111,8 +113,8 @@ def run_Duffing():
     analyze_system(sys, dt, max_t, True, 0, 'Duffing System')
 
 
-run_Rossler()
+# run_Rossler()
 # run_LotkaVolterra()
-# run_Lorenz()
+run_Lorenz()
 # run_Duffing()
 # run_Log()

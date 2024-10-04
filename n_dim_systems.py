@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 
 
+# FOR ANIMATIONS AND CHAOS BOOK ANALYSIS STUFF
+
+
 class System:
     def __init__(self, d_dt: Callable[[np.array, float, dict], np.array], params: dict,
                  dim: int):
@@ -188,6 +191,8 @@ def show_spread(sys: Union[System, DiscreteMap], X_0: np.array, dt=0.01, max_t=1
 
 
 def n_dim_approx_LCE(sys: Union[System, DiscreteMap], X_0: np.array, delta: float, lce_dim: int, n=1000, dt=0.01, max_t=100):
+    print(lce_dim)
+    print(sys.dim)
     if not (0 <= lce_dim < sys.dim):
         raise Exception('Invalid LCE dimension')
 
