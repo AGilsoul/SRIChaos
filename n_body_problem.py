@@ -115,7 +115,7 @@ class System:
 
     # update standalone state
     @staticmethod
-    def static_update(state: State, n, dt):
+    def static_update(state: NBodyState, n, dt):
         m = state.m
         r = state.r
         v = state.v
@@ -130,7 +130,7 @@ class System:
         new_a = System.static_accel(r, m, n)
         # second half-step kick for velocity
         new_v += new_a * dt / 2.0
-        return State(m, new_r, new_v, new_a)
+        return NBodyState(m, new_r, new_v, new_a)
 
     # method to compute energy in system, not done yet
     def compute_energy(self):
@@ -190,10 +190,13 @@ def main():
     sys = System(M, R, V)
 
 
-    # state_0 = State(M, R, V, np.zeros((N, 3)))  # Random state to model
+    state_0 = NBodyState(M, R, V, np.zeros((N, 3)))  # Random state to model
     # state_1 = System.static_update(state_0, N, dt=0.01)  # new state at t=dt
-    # print(f'Approximate LCE: {approx_sim_LCE(state_0, System.static_update, "v", N, 0.001, 10.0, 0.001)}')
-    animate_system(sys, 0.01)
+    dt = 0.001
+    t_max = 100.0
+    print(f"Approximate LCE: {approx_sim_LCE(NBodyState, state_0, System.static_update, ['rx', 'ry', 'rz', 'vx', 'vy', 'vz'], n=N, dt=dt, t_max=t_max, delta=0.01)}'")
+
+    # animate_system(sys, 0.01)
 
 
 if __name__ == '__main__':

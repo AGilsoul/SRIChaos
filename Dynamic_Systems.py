@@ -113,8 +113,8 @@ def run_Duffing():
     analyze_system(sys, dt, max_t, True, 0, 'Duffing System')
 
 
-# run_Rossler()
+run_Rossler()
 # run_LotkaVolterra()
-run_Lorenz()
+# run_Lorenz()
 # run_Duffing()
 # run_Log()
