@@ -193,10 +193,10 @@ def main():
     state_0 = NBodyState(M, R, V, np.zeros((N, 3)))  # Random state to model
     # state_1 = System.static_update(state_0, N, dt=0.01)  # new state at t=dt
     dt = 0.001
-    t_max = 100.0
-    print(f"Approximate LCE: {approx_sim_LCE(NBodyState, state_0, System.static_update, ['rx', 'ry', 'rz', 'vx', 'vy', 'vz'], n=N, dt=dt, t_max=t_max, delta=0.01)}'")
+    t_max = 500.0
+    # print(f"Approximate LCE: {approx_sim_LCE(NBodyState, state_0, System.static_update, ['rx', 'ry', 'rz', 'vx', 'vy', 'vz'], n=N, dt=dt, t_max=t_max, delta=0.01)}'")
 
-    # animate_system(sys, 0.01)
+    animate_system(sys, 0.01)
 
 
 if __name__ == '__main__':

@@ -8,15 +8,38 @@ from matplotlib import animation
 
 
 class System:
-    def __init__(self, d_dt: Callable[[np.array, float, dict], np.array], params: dict,
+    def __init__(self, dx_dt: Callable[[np.array, float, dict], np.array], params: dict,
                  dim: int):
-        self.d_dt = d_dt
+        self.dx_dt = dx_dt
         self.params = params
         self.t = 0
         self.dim = dim
 
-    def evolve(self, X: np.array, dt):
-        return X + self.d_dt(X, self.t, self.params) * dt
+    def evolve(self, X: np.array, h, h_tol):
+        # return X + self.d_dt(X, self.t, self.params) * dt
+        # Get the k values
+        k1 = h * self.dx_dt(X, self.t, self.params)
+        k2 = h * self.dx_dt(X + 1.0/4.0 * k1, self.t + 1.0/4.0 * h, self.params)
+        k3 = h * self.dx_dt(X + 3.0/32.0 * k1 + 9.0/32.0 * k2, self.t + 3.0/8.0 * h, self.params)
+        k4 = h * self.dx_dt(X + 1932.0/2197.0 * k1 - 7200.0/2197.0 * k2 + 7296.0/2197.0 * k3, self.t + 12.0/13.0 * h, self.params)
+        k5 = h * self.dx_dt(X + 439.0/216.0 * k1 - 8 * k2 + 3680.0/513.0 * k3 - 845.0/4104.0 * k4, self.t + h, self.params)
+        k6 = h * self.dx_dt(X - 8.0/27.0 * k1 + 2 * k2 - 3544.0/2565.0 * k3 + 1859.0/4104.0 * k4 - 11.0/40.0 * k5, self.t + 1.0/2.0 * h, self.params)
+
+        # Get 4th and 5th order solutions
+        x_k1 = X + 25.0/216.0 * k1 + 1408.0/2565.0 * k3 + 2197.0/4101.0 * k4 - 1.0/5.0 * k5
+        z_k1 = X + 16.0/135.0 * k1 + 6656.0/12825.0 * k3 + 28561.0/56430.0 * k4 - 9.0/50.0 * k5 + 2.0/55.0 * k6
+
+        # Get timestep from these solutions
+        max_norm = max(abs(z_k1 - x_k1).flatten())
+        s = np.pow(0.5, 0.25) * np.pow(h_tol / max_norm, 0.25)
+        dt = s * h
+
+        # Approximate step
+        self.t += dt
+        res = X + self.dx_dt(X, self.t, self.params) * dt
+        return res
+
+
 
 
 class DiscreteMap:
@@ -155,35 +178,80 @@ anim_X = []
 past_X = []
 
 
-def figure_update(t, sys: System, ax, dt):
+def figure_update(t, sys: System, ax, h, h_tol, projection, dims):
     global anim_X, past_X
     ax.cla()
-    ax.set_xlim(-15, 15)
-    ax.set_ylim(-15, 15)
-    ax.set_zlim(0, 20)
-    new_X = sys.evolve(anim_X, dt)
+    new_X = sys.evolve(anim_X, h, h_tol)
     past_X.append(new_X)
     past_arr = np.array(past_X).T
-    ax.scatter(new_X[0], new_X[1], new_X[2], s=10)
-    for p in past_arr:
-        ax.plot(p[0][-1000:], p[1][-1000:], p[2][-1000:], c='cyan')
+    xlims = dims[0]
+    ylims = dims[1]
+    if len(dims) > 2:
+        zlims = dims[2]
+    if projection is None:
+        ax.set_xlim(xlims[0], xlims[1])
+        ax.set_ylim(ylims[0], ylims[1])
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        if len(dims) > 2:
+            ax.set_zlim(zlims[0], zlims[1])
+            ax.set_zlabel('z')
+            ax.scatter(new_X[0], new_X[1], new_X[2], s=10)
+        else:
+            ax.scatter(new_X[0], new_X[1], s=10)
+        for p in past_arr:    
+            if len(dims) > 2:
+                ax.plot(p[0][-1000:], p[1][-1000:], p[2][-1000:], c='cyan')
+            else:
+                ax.plot(p[0][-2000:], p[1][-2000:], c='cyan', linewidth=0.75)
+    elif projection == 'xz':
+        ax.set_xlim(xlims[0], xlims[1])
+        ax.set_ylim(zlims[0], zlims[1])
+        ax.set_xlabel('x')
+        ax.set_ylabel('z')
+        ax.scatter(new_X[0], new_X[2], s=10)
+        for p in past_arr:
+            ax.plot(p[0][-1000:], p[2][-1000:], c='cyan', linewidth=1.0)
+    elif projection == 'xy':
+        ax.set_xlim(xlims[0], xlims[1])
+        ax.set_ylim(ylims[0], ylims[1])
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.scatter(new_X[0], new_X[1], s=10)
+        for p in past_arr:
+            ax.plot(p[0][-1000:], p[1][-1000:], c='cyan', linewidth=1.0)
+    elif projection == 'yz':
+        ax.set_xlim(ylims[0], ylims[1])
+        ax.set_ylim(zlims[0], zlims[1])
+        ax.set_xlabel('y')
+        ax.set_ylabel('z')
+        ax.scatter(new_X[0], new_X[2], s=10)
+        for p in past_arr:
+            ax.plot(p[1][-1000:], p[2][-1000:], c='cyan', linewidth=1.0)
     anim_X = new_X
 
 
 
-def show_spread(sys: Union[System, DiscreteMap], X_0: np.array, dt=0.01, max_t=100, delta=0.5):
+def show_spread(sys: Union[System, DiscreteMap], X_0: np.array, h=0.1, h_tol=1.0e-8, max_t=100, delta=0.5, dims=[(-30, 30), (-30, 30), (-50, 50)], dup_dim=2, projection=None):
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    if projection is None and len(dims) == 3:
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+    else:
+        ax = fig.add_subplot(1, 1, 1)
     global anim_X
     anim_X = []
-    for i in range(5):
-        for j in range(5):
-            cur_X = np.copy(X_0)
-            cur_X[0] += delta * i
-            cur_X[1] += delta * j
-            anim_X.append(cur_X)
+    for i in range(dup_dim):
+        for j in range(dup_dim):
+            if len(X_0[0]) > 2:
+                for k in range(dup_dim):
+                    for X in X_0:
+                        anim_X.append([X[0] + np.random.uniform(-delta, delta), X[1] + np.random.uniform(-delta, delta), X[2] + np.random.uniform(-delta, delta)])
+            else:
+                for X in X_0:
+                        anim_X.append([X[0] + np.random.uniform(-delta, delta), X[1] + np.random.uniform(-delta, delta)])
+    
     anim_X = np.array(anim_X, dtype=float).T
-    anim = animation.FuncAnimation(fig, figure_update, fargs=(sys, ax, dt),
+    anim = animation.FuncAnimation(fig, figure_update, fargs=(sys, ax, h, h_tol, projection, dims),
                                    interval=1, blit=False)
     plt.show()
     plt.close()
